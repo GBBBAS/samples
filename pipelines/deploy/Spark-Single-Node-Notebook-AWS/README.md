@@ -1,9 +1,9 @@
 # Spark Single Node Notebook AWS
 
-This article provides a guide how to create a conda based selfcontained environment to run RTDIP that integrates the following components:
-* Java and Spark (Single node configuration). Currently, v3.4.1 Spark (PySpark) has been configured and tested.
-* AWS Libraries for Spark/Hadoop
-* Jupyter Notebook 
+This article provides a guide on how to create a conda based self-contained environment to run RTDIP that integrates the following components:
+* Java JDK and Apache Spark (Single node configuration). Currently, v3.4.1 Spark (PySpark) has been configured and tested.
+* AWS Libraries.
+* Jupyter Notebook. 
 
 The components of this environment are all pinned to a specific source distribution of RTDIP.
 
@@ -13,7 +13,8 @@ The components of this environment are all pinned to a specific source distribut
 * run_conda_installer.sh: Tested on an x86 Environment.
 * For AWS access (e.g. S3) the required permissions available in the environment are required at runtime.
 
-After the installer completes, Jupyter notebook will be running on port 8080. Please check that this port is free or change the configuration in the installer if required.
+When the installation completes, a Jupyter notebook will be running on port 8080. 
+Please check that this port is available or change the configuration in the installer if required.
 
 # Deploy and Running
 Run *run_in_docker.sh*. After the installer completes:
