@@ -10,7 +10,7 @@ DEPLOYER_TMP_DIR=$(echo ${TMPDIR:-/tmp}"/DEPLOYER")
 MINICONDA_NAME=miniconda
 MINICONDA_PATH=$HOME/$MINICONDA_NAME/
 PATH=$MINICONDA_PATH/bin:$PATH
-CONDA_ENV="rtdip-sdk"
+CONDA_ENV="lfenergy"
 CONDA_ENV_HOME=$(pwd)/apps/$CONDA_ENV
 mkdir -p $CONDA_ENV_HOME
 CWD=$(pwd)
@@ -40,14 +40,31 @@ conda install -n base conda-libmamba-solver -y
 echo "Setting Solver to libmama"
 conda config --set solver libmamba
 
+# RTDIP
+export RTDIP_FILE_NAME="InnowattsRelease.zip"
+export RTDIP_DOWNLOAD_URL="https://github.com/vbayon/core/archive/refs/heads/$RTDIP_FILE_NAME"
+export RTDIP_DIR="core-InnowattsRelease"
+
+echo "Installing RTDIP ***********************************"
+rm -rf ./$RTDIP_DIR
+rm -rf ./api
+rm -rf ./sdk
+curl -L -o $RTDIP_FILE_NAME $RTDIP_DOWNLOAD_URL
+unzip -o ./$RTDIP_FILE_NAME  > /dev/null
+cp -r ./$RTDIP_DIR/src/sdk/python/* .
+rm  ./$RTDIP_FILE_NAME
 
 
-echo "Creating Conda Environment"
-conda  env create -f environment.yml -y
+echo "Creating the environment with [CONDA]: CONDA LIBMAMBA SOLVER"
+## Copying the env file
+rm ./environment.yml
+cp ./$RTDIP_DIR/environment.yml ./
+find ./environment.yml -type f -exec sed -i 's/rtdip-sdk/lfenergy/g' {} \;
+conda  env create -f environment.yml
 
 #
 # JDK
-echo "Installing JDK jdk-17.0.2 ***********************************"
+echo "JDK jdk-17.0.2 ***********************************" 
 export JAVA_VERSION="jdk-17.0.2"
 export JDK_FILE_NAME="openjdk-17.0.2_linux-x64_bin.tar.gz"
 export JDK_DOWNLOAD_URL="https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/$JDK_FILE_NAME"
@@ -56,7 +73,6 @@ if [ -f "$CONDA_ENV/$JDK_FILE_NAME" ]; then
   echo "$CONDA_ENV/$JDK_FILE_NAME Exists"
   echo "Removing JDK: $JDK_FILE_NAME"
   rm -rf $CONDA_ENV/$JAVA_VERSION
-  # rm $CONDA_ENV/$JDK_FILE_NAME
   unlink $HOME/JDK
 fi
 
@@ -73,19 +89,17 @@ ln -s $CONDA_ENV_HOME/$JAVA_VERSION $HOME/JDK
 export JAVA_HOME=$HOME/JDK
 export PATH=$HOME/JDK/bin:$PATH
 
-# SPARK 3.3.2
-echo "Installing SPARK 3.3.2 ***********************************" 
-export SPARK_VERSION="spark-3.3.2-bin-hadoop3"
-export SPARK_FILE_NAME="spark-3.3.2-bin-hadoop3.tgz"
-export SPARK_DOWNLOAD_URL="https://archive.apache.org/dist/spark/spark-3.3.2/$SPARK_FILE_NAME"
-export PYSPARK_VERSION="3.3.2"
+# SPARK 3.4.1
+echo "Installing SPARK 3.4.1***********************************"
+export SPARK_VERSION="spark-3.4.1-bin-hadoop3"
+export SPARK_FILE_NAME="spark-3.4.1-bin-hadoop3.tgz"
+export SPARK_DOWNLOAD_URL="https://dlcdn.apache.org/spark/spark-3.4.1/$SPARK_FILE_NAME"
 
 
 if [ -f "$CONDA_ENV/$SPARK_VERSION" ]; then
   echo "$CONDA_ENV/$SPARK_FILE_NAME Exists"
   echo "Removing Spark: $SPARK_FILE_NAME"
   rm -rf $CONDA_ENV/$SPARK_VERSION
-  # rm $CONDA_ENV/$SPARK_FILE_NAME
   unlink $HOME/SPARK
 fi
 
@@ -177,26 +191,29 @@ mv $SCALA_JAVA8_COMPAT_JAR_FILE_NAME  $SPARK_HOME/jars
 curl -o $PROTON_J_JAR_FILE_NAME $PROTON_J_JAR_DOWNLOAD_URL
 mv $PROTON_J_JAR_FILE_NAME $SPARK_HOME/jars
 
-# Cleaning up
-rm $SPARK_FILE_NAME
-rm $JDK_FILE_NAME
-
-#
 echo "Finished INSTALLING $JAVA_VERSION and $SPARK_VERSION and Extra Libraries"
+
 
 eval "$(conda shell.bash hook)"
 conda config --set default_threads 4
 conda env list
-# Uncoment the line below to avoid error: CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.
+# Load by default conda environment vars when running in container
+# To avoid error: CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.
 # source $HOME/$MINICONDA_NAME/etc/profile.d/conda.sh
-
+##
+conda install -y conda-build
 conda activate $CONDA_ENV
 
+# Adding source code to the lib path
+conda develop $CONDA_ENV_HOME
+
 conda info
+echo "Finished Installing Conda [Mamba] Env $CONDA_ENV"
 end_time=`date +%s`
 runtime=$((end_time-start_time))
 echo "Total Installation Runtime: $runtime [seconds]"
-# Creating env file
+echo "Test environment not intended for using in production. Backup any changes made to this environment"
+#
 CONDA_ENVIRONMENT_FILE_NAME="conda_environment_$CONDA_ENV.sh"
 echo "#!/usr/bin/env bash" > $CONDA_ENVIRONMENT_FILE_NAME
 echo "export PATH=$PATH" >> $CONDA_ENVIRONMENT_FILE_NAME
@@ -205,7 +222,8 @@ echo "export SPARK_HOME=$SPARK_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "source $HOME/$MINICONDA_NAME/etc/profile.d/conda.sh" >> $CONDA_ENVIRONMENT_FILE_NAME
 chmod +x $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME"
-if [ -z ${NOTEBOOK_PORT+x} ]; then NOTEBOOK_PORT="8080"; else echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"; fi
 echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
-source ./$CONDA_ENVIRONMENT_FILE_NAME
+# Install and Run Notebook
+conda install -y notebook=6.5.4
+export NOTEBOOK_PORT="8080"
 jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=0.0.0.0 --NotebookApp.token='' --NotebookApp.password=''  --allow-root
