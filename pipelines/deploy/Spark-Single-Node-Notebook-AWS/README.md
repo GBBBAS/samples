@@ -18,5 +18,5 @@ Please check that this port is available or change the configuration in the inst
 Run *run_in_docker.sh*. After the installer completes:
 * At http://localhost:8080/ a jupyter notebook server will be running. Notebooks can be created to run for example new RTDIP pipelines.
 * To test the environment, create a new notebook and copy the contents of MISO_pipeline_sample.py and run the notebook. This pipeline queries MISO (Midcontinent Independent System Operator) and saves the results of the query locally under a newly created directory called spark-warehouse.
-* For debugging purposes and running from inside the container other RTDIP pipeplines, a new file *conda_environment_rtdip-sdk.sh* is created. Please use this file  to activate the  conda environment (e.g. *source ./conda_environment_lfenergy.sh*) within the container.
+* For debugging purposes and running from inside the container other RTDIP pipeplines, a new file *conda_environment_lfenergy.sh* is created. Please use this file  to activate the  conda environment (e.g. *source ./conda_environment_lfenergy.sh*) within the container.
 
