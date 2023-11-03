@@ -226,4 +226,14 @@ echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
 # Install and Run Notebook
 conda install -y notebook=6.5.4
 export NOTEBOOK_PORT="8080"
-jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=0.0.0.0 --NotebookApp.token='' --NotebookApp.password=''  --allow-root
+echo "Going to install dagster"
+conda install -y dagster=1.5.6
+echo "Going to install dagster-webserver"
+yes | pip install dagster-webserver==1.5.6
+echo "Going to run Jupyter"
+jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=0.0.0.0 --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
+echo "Going to run dagster dev"
+dagster dev &
+date
+echo "Running...."
+sleep infinity
