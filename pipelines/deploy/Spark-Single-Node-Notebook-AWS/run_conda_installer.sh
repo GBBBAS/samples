@@ -227,14 +227,14 @@ echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
 conda install -y notebook=6.5.4
 export NOTEBOOK_PORT="8080"
 export DAGSTER_PORT="3000"
-export DAGSTER_HOST="0.0.0.0"
+export HOST="0.0.0.0"
 # Install and run Dagster
 echo "Going to install dagster"
 conda install -y dagster=1.5.6
 echo "Going to install dagster-webserver"
 yes | pip install dagster-webserver==1.5.6
-echo "Going to run Jupyter"
-jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=0.0.0.0 --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
-echo "Going to run Dagster dev"
-dagster dev -h $DAGSTER_HOST -p $DAGSTER_PORT-f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
+echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
+jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
+echo "Going to run Dagster dev on host:$HOST/port:$DAGSTER_PORT "
+dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
 sleep infinity
