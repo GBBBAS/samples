@@ -8,9 +8,9 @@ from dagster import asset
 import shutil
 
 
-@asset  # add the asset decorator to tell Dagster this is an asset
+@asset
 def run_miso_ingest():
-    # First Clear local files
+    # First: Clear local files
     shutil.rmtree("spark-warehouse")
 
     spark = (
