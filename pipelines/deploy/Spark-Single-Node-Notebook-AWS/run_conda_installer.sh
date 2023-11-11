@@ -193,6 +193,47 @@ mv $PROTON_J_JAR_FILE_NAME $SPARK_HOME/jars
 
 echo "Finished INSTALLING $JAVA_VERSION and $SPARK_VERSION and Extra Libraries"
 
+ Password Generator
+apt-get install pwgen
+##
+echo "Installing MySQL"
+# Generate rnd passwords
+MYSQL_ROOT_PASSWORD=$(pwgen -s -c -n 10)
+MYSQL_DAGSTER_PASSWORD=$(pwgen -s -c -n 10)
+
+
+export MYSQL_HOSTNAME="localhost"
+export MYSQL_PORT="3306"
+export MYSQL_DAGSTER_DATABASE_NAME="dagster"
+export MYSQL_VOLUME="/tmp"
+export MYSQL_DAGSTER_USERNAME="dagster"
+
+apt-get install debconf -y
+debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD"
+debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD"
+
+
+apt-get install -y mysql-server
+apt-get install -y mysql-client
+service mysql --full-restart
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE ${MYSQL_DAGSTER_DATABASE_NAME} CHARACTER SET utf8 COLLATE utf8_unicode_ci;;"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "CREATE USER ${MYSQL_DAGSTER_USERNAME}@localhost IDENTIFIED BY '${MYSQL_DAGSTER_PASSWORD}';"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON ${MYSQL_DAGSTER_DATABASE_NAME}.* TO '${MYSQL_DAGSTER_USERNAME}'@'localhost';"
+mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES;"
+
+export DAGSTER_HOME=$CONDA_ENV_HOME
+
+sed -i "s/DAGSTER_MYSQL_HOST/$MYSQL_HOSTNAME/" $DAGSTER_HOME/dagster.yaml
+sed -i "s/DAGSTER_MYSQL_USER/$MYSQL_DAGSTER_USERNAME/" $DAGSTER_HOME/dagster.yaml
+sed -i "s/DAGSTER_MYSQL_PASSWORD/$MYSQL_DAGSTER_PASSWORD/" $DAGSTER_HOME/dagster.yaml
+sed -i "s/DAGSTER_MYSQL_DB/$MYSQL_DAGSTER_DATABASE_NAME/" $DAGSTER_HOME/dagster.yaml
+sed -i "s/DAGSTER_MYSQL_PORT/$MYSQL_PORT/" $DAGSTER_HOME/dagster.yaml
+
+    hostname: DAGSTER_MYSQL_HOST
+    username: DAGSTER_MYSQL_USER
+    password: DAGSTER_MYSQL_PASSWORD
+    db_name: DAGSTER_MYSQL_DB
+    port: DAGSTER_MYSQL_PORT
 
 eval "$(conda shell.bash hook)"
 conda config --set default_threads 4
@@ -219,22 +260,31 @@ echo "#!/usr/bin/env bash" > $CONDA_ENVIRONMENT_FILE_NAME
 echo "export PATH=$PATH" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export JAVA_HOME=$JAVA_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
+echo "export DAGSTER_HOME=$DAGSTER_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "source $HOME/$MINICONDA_NAME/etc/profile.d/conda.sh" >> $CONDA_ENVIRONMENT_FILE_NAME
 chmod +x $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME"
 echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
 # Install and Run Notebook
-conda install -y notebook=6.5.4
+## conda install -y notebook=6.5.4
 export NOTEBOOK_PORT="8080"
 export DAGSTER_PORT="3000"
 export HOST="0.0.0.0"
 # Install and run Dagster
 echo "Going to install dagster"
 conda install -y dagster=1.5.6
+conda install -y dagster-mysql=1.5.6
 echo "Going to install dagster-webserver"
 yes | pip install dagster-webserver==1.5.6
 echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
-jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
-echo "Going to run Dagster dev on host:$HOST/port:$DAGSTER_PORT "
-dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
+## jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
+echo "Checking Dagster Config files: dagster.yaml and workspace.yaml"
+ls -la dagster.yaml
+ls -la workspace.yaml
+echo "Going to run Dagster Webserver on host:$HOST/port:$DAGSTER_PORT "
+dagster-webserver -h $HOST -p $DAGSTER_PORT &
+echo "Going to run Dagster Daemon"
+dagster-daemon run &
+# dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
 sleep infinity
+
