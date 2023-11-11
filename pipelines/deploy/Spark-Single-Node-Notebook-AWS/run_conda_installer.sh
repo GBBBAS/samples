@@ -229,12 +229,6 @@ sed -i "s/DAGSTER_MYSQL_PASSWORD/$MYSQL_DAGSTER_PASSWORD/" $DAGSTER_HOME/dagster
 sed -i "s/DAGSTER_MYSQL_DB/$MYSQL_DAGSTER_DATABASE_NAME/" $DAGSTER_HOME/dagster.yaml
 sed -i "s/DAGSTER_MYSQL_PORT/$MYSQL_PORT/" $DAGSTER_HOME/dagster.yaml
 
-    hostname: DAGSTER_MYSQL_HOST
-    username: DAGSTER_MYSQL_USER
-    password: DAGSTER_MYSQL_PASSWORD
-    db_name: DAGSTER_MYSQL_DB
-    port: DAGSTER_MYSQL_PORT
-
 eval "$(conda shell.bash hook)"
 conda config --set default_threads 4
 conda env list
@@ -285,6 +279,5 @@ echo "Going to run Dagster Webserver on host:$HOST/port:$DAGSTER_PORT "
 dagster-webserver -h $HOST -p $DAGSTER_PORT &
 echo "Going to run Dagster Daemon"
 dagster-daemon run &
-# dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
 sleep infinity
 
