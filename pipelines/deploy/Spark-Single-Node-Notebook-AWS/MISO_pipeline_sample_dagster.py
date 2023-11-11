@@ -12,7 +12,7 @@ import os
 
 @asset
 def run_miso_ingest():
-    
+
     # First: Clear local files
     spark_warehouse_local_path: str = "spark-warehouse"
     if os.path.exists(spark_warehouse_local_path) and os.path.isdir(spark_warehouse_local_path):
