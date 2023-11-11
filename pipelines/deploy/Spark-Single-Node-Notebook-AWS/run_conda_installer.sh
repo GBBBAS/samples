@@ -255,6 +255,8 @@ echo "export PATH=$PATH" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export JAVA_HOME=$JAVA_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export DAGSTER_HOME=$DAGSTER_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
+echo "export HOST=$HOST" >> $CONDA_ENVIRONMENT_FILE_NAME
+echo "export DAGSTER_PORT=$DAGSTER_PORT" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "source $HOME/$MINICONDA_NAME/etc/profile.d/conda.sh" >> $CONDA_ENVIRONMENT_FILE_NAME
 chmod +x $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME"
@@ -275,9 +277,10 @@ echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
 echo "Checking Dagster Config files: dagster.yaml and workspace.yaml"
 ls -la dagster.yaml
 ls -la workspace.yaml
-echo "Going to run Dagster Webserver on host:$HOST/port:$DAGSTER_PORT "
-dagster-webserver -h $HOST -p $DAGSTER_PORT &
-echo "Going to run Dagster Daemon"
-dagster-daemon run &
+echo "Going to run Dagster DEV  on host:$HOST/port:$DAGSTER_PORT "
+## dagster-webserver -h $HOST -p $DAGSTER_PORT &
+## echo "Going to run Dagster Daemon"
+## dagster-daemon run &
+dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
 sleep infinity
 

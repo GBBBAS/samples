@@ -10,6 +10,7 @@ RUN mkdir -p /home/rtdip/apps/lfenergy
 COPY environment.yml /home/rtdip/apps/lfenergy/
 COPY MISO_pipeline_sample*.* /home/rtdip/apps/lfenergy/
 COPY dagster.yaml /home/rtdip/apps/lfenergy/
+COPY workspace.yaml /home/rtdip/apps/lfenergy/
 RUN chmod +x /home/rtdip/run_conda_installer.sh
 WORKDIR /home/rtdip
 ENTRYPOINT ["/home/rtdip/run_conda_installer.sh"]
