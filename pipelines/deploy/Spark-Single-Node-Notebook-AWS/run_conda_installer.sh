@@ -197,11 +197,11 @@ echo "Finished INSTALLING $JAVA_VERSION and $SPARK_VERSION and Extra Libraries"
 apt-get install pwgen
 ##
 echo "Installing MySQL"
-# Generate rnd passwords
+# Generate random passwords
 MYSQL_ROOT_PASSWORD=$(pwgen -s -c -n 10)
 MYSQL_DAGSTER_PASSWORD=$(pwgen -s -c -n 10)
 
-
+# MySQL Config for MySQL Clients connecting to MySQL Server
 export MYSQL_HOSTNAME="localhost"
 export MYSQL_PORT="3306"
 export MYSQL_DAGSTER_DATABASE_NAME="dagster"
@@ -249,6 +249,8 @@ runtime=$((end_time-start_time))
 echo "Total Installation Runtime: $runtime [seconds]"
 echo "Test environment not intended for using in production. Backup any changes made to this environment"
 #
+export DAGSTER_PORT="3000"
+export HOST="0.0.0.0"
 CONDA_ENVIRONMENT_FILE_NAME="conda_environment_$CONDA_ENV.sh"
 echo "#!/usr/bin/env bash" > $CONDA_ENVIRONMENT_FILE_NAME
 echo "export PATH=$PATH" >> $CONDA_ENVIRONMENT_FILE_NAME
@@ -257,8 +259,8 @@ echo "export SPARK_HOME=$SPARK_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export DAGSTER_HOME=$DAGSTER_HOME" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export HOST=$HOST" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "export DAGSTER_PORT=$DAGSTER_PORT" >> $CONDA_ENVIRONMENT_FILE_NAME
-echo "export DAGSTER_MYSQL_USER=$DAGSTER_MYSQL_USER" >> $CONDA_ENVIRONMENT_FILE_NAME
-echo "export DAGSTER_MYSQL_PASSWORD=$DAGSTER_MYSQL_PASSWORD" >> $CONDA_ENVIRONMENT_FILE_NAME
+echo "export MYSQL_DAGSTER_USERNAME=$MYSQL_DAGSTER_USERNAME" >> $CONDA_ENVIRONMENT_FILE_NAME
+echo "export MYSQL_DAGSTER_PASSWORD=$MYSQL_DAGSTER_PASSWORD" >> $CONDA_ENVIRONMENT_FILE_NAME
 echo "source $HOME/$MINICONDA_NAME/etc/profile.d/conda.sh" >> $CONDA_ENVIRONMENT_FILE_NAME
 chmod +x $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME"
@@ -266,23 +268,21 @@ echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
 # Install and Run Notebook
 ## conda install -y notebook=6.5.4
 export NOTEBOOK_PORT="8080"
-export DAGSTER_PORT="3000"
-export HOST="0.0.0.0"
 # Install and run Dagster
 echo "Going to install dagster"
 conda install -y dagster=1.5.6
 conda install -y dagster-mysql=1.5.6
 echo "Going to install dagster-webserver"
 yes | pip install dagster-webserver==1.5.6
-echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
+## echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
 ## jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
-echo "Checking Dagster Config files: dagster.yaml and workspace.yaml"
-ls -la dagster.yaml
-ls -la workspace.yaml
-echo "Going to run Dagster DEV  on host:$HOST/port:$DAGSTER_PORT "
-## dagster-webserver -h $HOST -p $DAGSTER_PORT &
-## echo "Going to run Dagster Daemon"
-## dagster-daemon run &
-dagster dev -h $HOST -p $DAGSTER_PORT -f $CONDA_ENV_HOME/MISO_pipeline_sample_dagster.py
+echo "Going to run Dagster on host:$HOST/port:$DAGSTER_PORT "
+echo "Running Dagster daemon"
+dagster-daemon run > dagster_daemon_logs.txt 2>&1 &
+echo "Allowing for dagster-daemon to start running"
+sleep 60
+echo "Running Webserver"
+dagster-webserver -h $HOST -p $DAGSTER_PORT > dagster_webserver_logs.txt 2>&1 &
+tail -f *.txt
 sleep infinity
 
