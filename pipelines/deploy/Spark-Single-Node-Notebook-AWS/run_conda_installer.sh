@@ -266,7 +266,7 @@ chmod +x $CONDA_ENVIRONMENT_FILE_NAME
 echo "export SPARK_HOME=$SPARK_HOME"
 echo "NOTEBOOK_PORT: $NOTEBOOK_PORT"
 # Install and Run Notebook
-## conda install -y notebook=6.5.4
+conda install -y notebook=6.5.4
 export NOTEBOOK_PORT="8080"
 # Install and run Dagster
 echo "Going to install dagster"
@@ -274,8 +274,8 @@ conda install -y dagster=1.5.6
 conda install -y dagster-mysql=1.5.6
 echo "Going to install dagster-webserver"
 yes | pip install dagster-webserver==1.5.6
-## echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
-## jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
+echo "Going to run Jupyter on host:$HOST/port:$NOTEBOOK_PORT"
+jupyter notebook --no-browser --port=$NOTEBOOK_PORT --ip=$HOST --NotebookApp.token='' --NotebookApp.password=''  --allow-root &
 echo "Going to run Dagster on host:$HOST/port:$DAGSTER_PORT "
 echo "Running Dagster daemon"
 dagster-daemon run > dagster_daemon_logs.txt 2>&1 &

@@ -10,9 +10,14 @@ from rtdip_sdk.pipelines.destinations import SparkDeltaDestination
 from pyspark.sql import SparkSession
 
 import shutil
+import os
 
-# First Clear local files
-shutil.rmtree("spark-warehouse")
+spark_warehouse_local_path: str = "spark-warehouse"
+if os.path.exists(spark_warehouse_local_path) and os.path.isdir(spark_warehouse_local_path):
+    try:
+        shutil.rmtree("spark-warehouse")
+    except Exception as ex:
+        print(str(ex))
 
 spark = (
     SparkSession.builder.config("spark.jars.packages", "io.delta:delta-core_2.12:2.4.0")
